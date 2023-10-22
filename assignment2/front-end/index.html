@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>科学计算器</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+      font-family: sans-serif;
+      overflow-y: scroll;
+    }
+
+    ::-webkit-scrollbar {
+      display: none;
+    }
+
+    .calculator {
+      width: 380px;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      background-color: #3a4452;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      padding-right: 0;
+    }
+
+    .screen {
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: center;
+      height: 60px;
+      margin-bottom: 10px;
+      padding-right: 10px;
+      /* border: 1px solid #888; */
+      border-radius: 5px;
+      font-size: 24px;
+      letter-spacing: 2px;
+      line-height: 1.2;
+      overflow-x: scroll;
+      white-space: nowrap;
+      color: #fff;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-gap: 10px;
+    }
+
+    button {
+      height: 60px;
+      width: 60px;
+      border: none;
+      border-radius: 8px;
+      background-color: #3a4452;
+      cursor: pointer;
+      font-size: 18px;
+      transition: all 0.1s ease-in-out;
+      box-shadow: -10px -8px 4px rgba(216, 215, 215, 0.1);
+      border: 1px solid rgba(197, 197, 197, 0.1);
+      color: #fff;
+      text-align: center;
+      /* 添加阴影效果 */
+    }
+
+    button:hover {
+      opacity: 0.8;
+    }
+
+    .number {
+      /* background-color: #f7f7f7; */
+      color: #444;
+    }
+
+    .operator {
+      /* background-color: #ff9900; */
+      color: #fff;
+    }
+
+    .clear {
+      /* grid-column: 1/ span 1; */
+      /* background-color: #f00; */
+      color: #fff;
+    }
+
+    .clear2 {
+      grid-column: span 4;
+      /* background-color: #f00; */
+      color: #fff;
+    }
+
+    .equal {
+      /* grid-column: 2 / span 2; */
+      /* background-color: #00f; */
+      color: #fff;
+    }
+
+    .all-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .all-row .clear2 {
+      grid-column: 1 / -1;
+    }
+
+    .all-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-gap: 10px;
+    }
+
+    .all-row .clear2 {
+      grid-column: 1 / -1;
+      /* 跨越所有列 */
+      width: 400%;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="calculator">
+    <div class="screen" id="screen"></div>
+    <div class="buttons">
+      <button class="clear" onclick="clearScreen()" style="color: #33ffd8;">Clear</button>
+      <button onclick="ans()" style="color: #33ffd8;">ans</button>
+      <button onclick="addSymbol('(')" style="color: #33ffd8;">(</button>
+      <button onclick="addSymbol(')')" style="color: #33ffd8;">)</button>
+      <button onclick="addSymbol('%')" style="color: #33ffd8;">%</button>
+      <button onclick="addNumber(7)">7</button>
+      <button onclick="addNumber(8)">8</button>
+      <button onclick="addNumber(9)">9</button>
+      <button class="operator" onclick="addSymbol('/')" style="color: #33ffd8;">/</button>
+      <button onclick="addNumber(4)">4</button>
+      <button onclick="addNumber(5)">5</button>
+      <button onclick="addNumber(6)">6</button>
+      <button class="operator" onclick="addSymbol('*')" style="color: #33ffd8;">*</button>
+      <button onclick="addNumber(1)">1</button>
+      <button onclick="addNumber(2)">2</button>
+      <button onclick="addNumber(3)">3</button>
+      <button class="operator" onclick="addSymbol('-')" style="color: #33ffd8;">-</button>
+      <button onclick="addSymbol('log(')" style="color: #33ffd8;">log</button>
+      <button onclick="addNumber(0)">0</button>
+      <button onclick="addSymbol('.')" style="color: #33ffd8;">.</button>
+      <button class="operator" onclick="addSymbol('+')" style="color: #33ffd8;">+</button>
+      <button onclick="addSymbol('tan(')" style="color: #33ffd8;">tan</button>
+      <button onclick="addSymbol('sin(')" style="color: #33ffd8;">sin</button>
+      <button onclick="addSymbol('cos(')" style="color: #33ffd8;">cos</button>
+      <button onclick="addSymbol('sqrt(')" style="color: #33ffd8;">√</button>
+      <button onclick="addSymbol('e')" style="color: #33ffd8;">e</button>
+      <button onclick="addSymbol('^')" style="color: #33ffd8;">x^y</button>
+      <button class="equal" onclick="calculate()" style="color: #33ffd8;">=</button>
+      <!-- <button class="clear2" onclick="clearScreen()" style="color: #33ffd8;">all</button> -->
+      <div class="all-row">
+        <button class="clear2" onclick="allShow()" style="color: #33ffd8;">All</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let numType = 0
+      // 一开始，获取id
+      ; (function getId() {
+        fetch('http://127.0.0.1:7788/caculate/get', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(0)
+        }).then(response => response.json())
+          .then(data => {
+            numType = data.id
+            console.log(numType, 'numType')
+          })
+          .catch(error => console.error(error))
+      })()
+
+    console.log(numType, 'numType2')
+    // 获取屏幕元素
+    let screen = document.getElementById('screen')
+
+    // 清空屏幕
+    function clearScreen() {
+      screen.innerHTML = ''
+      numType++
+    }
+
+    // 添加数字
+    function addNumber(num) {
+      screen.innerHTML += num
+    }
+
+    // 添加符号
+    var lastSymbolAdded
+    function addSymbol(symbol) {
+      if (symbol === '^' || symbol === '**') {
+        symbol = '**'
+      } else if (symbol === 'sin(' || symbol === 'cos(' || symbol === 'tan(' || symbol === 'log(' || symbol === 'sqrt(') {
+        // 添加函数或根号时，记录最后添加的符号
+        lastSymbolAdded = symbol
+
+        screen.innerHTML += symbol
+        return
+      } else if (lastSymbolAdded === 'sqrt(') {
+        // 在sqrt(后直接添加数字或变量名时，补全表达式
+        if (!isNaN(parseFloat(symbol))) {
+          screen.innerHTML = screen.innerHTML.slice(0, -1) // 删除右括号
+          // screen.innerHTML += symbol + ')'
+        } else {
+          // screen.innerHTML = screen.innerHTML.slice(0, -1) // 删除右括号
+          // screen.innerHTML += ')' + symbol
+        }
+        lastSymbolAdded = undefined
+        return
+      }
+      screen.innerHTML += symbol
+      lastSymbolAdded = undefined
+    }
+
+    // 计算结果
+    function calculate() {
+      try {
+        let expression = screen.innerHTML
+        let numComputed = screen.innerHTML
+        console.log(expression, 'expression')
+        // 将 sin 替换为 Math.sin，并将角度转换为弧度
+        expression = expression.replace(/sin\((\d+)\)/g, function (match, angle) {
+          let radians = parseFloat(angle) * (Math.PI / 180)
+          return Math.sin(radians)
+        })
+        // 将 cos 替换为 Math.cos，并将角度转换为弧度
+        expression = expression.replace(/cos\((\d+)\)/g, function (match, angle) {
+          let radians = parseFloat(angle) * (Math.PI / 180)
+          return Math.cos(radians)
+        })
+        // 将 tan 替换为 Math.tan，并将角度转换为弧度
+        expression = expression.replace(/tan\((\d+)\)/g, function (match, angle) {
+          let radians = parseFloat(angle) * (Math.PI / 180)
+          return Math.tan(radians)
+        })
+        // 将 log 替换为 Math.log()
+        expression = expression.replace(/log\((\d+)\)/g, function (match, number) {
+          return Math.log(parseFloat(number))
+        })
+
+        expression = expression.replace(/sqrt\((\d+)\)/g, function (match, number) {
+          return Math.sqrt(number)
+        })
+
+        let result = eval(expression)
+        screen.innerHTML = result.toLocaleString()
+        let datas = `${expression}=${result.toLocaleString()}`
+
+        fetch('http://127.0.0.1:38125/caculate/save', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(datas)
+        }).then(response => response.json())
+          .then(data => {
+            numType++
+            // 获取浏览器list
+            let list = window.localStorage.getItem("list") ? JSON.parse(window.localStorage.getItem("list")) : []
+
+            if (list.length > 10) {
+              list.shift() // 去掉第一位
+            }
+
+            list.push(`${numComputed}=${result.toLocaleString()}`) // 往数组末尾添加元素
+
+            window.localStorage.setItem("list", JSON.stringify(list)) // 将数组存入浏览器
+          })
+          .catch(error => console.error(error))
+      } catch (error) {
+        alert('输入表达式有误，请检查！')
+      }
+    }
+
+    function ans() {
+      if (numType) {
+        fetch('http://127.0.0.1:38125/caculate/get', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(numType)
+        }).then(response => response.json())
+          .then(data => {
+            const regExp = /=(\d+)/
+            const matchArr = data.r.match(regExp)
+            const num = matchArr && matchArr[1]
+            console.log(num) // 输出 785
+            numType--
+          })
+          .catch(error => console.error(error))
+      } else {
+        alert("没有更多数据....")
+      }
+    }
+
+    function allShow() {
+      let list = JSON.parse(window.localStorage.getItem("list"))
+      screen.innerHTML = list.join(',')
+    }
+  </script>
+</body>
+
+</html>
